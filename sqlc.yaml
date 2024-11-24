@@ -11,3 +11,4 @@ sql:
         emit_prepared_queries: false   # Emit prepared statements
         emit_interface: false          # Do not generate interface
         emit_exact_table_names: false  # Use Go struct names instead of exact table names
+        emit_empty_slices: true

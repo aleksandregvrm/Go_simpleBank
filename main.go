@@ -1,38 +1,36 @@
 package main
 
-import "fmt"
+import (
+	"database/sql"
+	"fmt"
+	"log"
 
-type MyPersonalStruct struct {
-	name    string
-	surname string
-	age     int16
-	score   int16
-}
+	"example.com/banking/api"
+	db "example.com/banking/db/sqlc"
+	_ "github.com/lib/pq"
+)
 
-type FunctionalInterface interface {
-	calculateAgeScore() int16
-	calculateOtherThings() int64
-}
-
-// Implement the interface method for MyPersonalStruct
-func (ps *MyPersonalStruct) calculateAgeScore() int16 {
-	return 12
-}
-
-// Factory function to create a new MyPersonalStruct
-func NewPersonalStruct() *MyPersonalStruct {
-	return &MyPersonalStruct{
-		name:    "Dachi",
-		surname: "Imedadze",
-		age:     23,
-		score:   89,
-	}
-}
+const (
+	dbDriver      = "postgres"
+	dbSource      = "postgres://bankingGo2:bankingGo2@localhost:5433/bankingGo2?sslmode=disable"
+	serverAddress = "127.0.0.1:8080"
+)
 
 func main() {
-	fara := NewPersonalStruct()
-	fara.calculateAgeScore()
-	structPersonale := NewPersonalStruct()
-	fmt.Println(structPersonale.calculateAgeScore())
-	fmt.Println("krebsona dabrundashvili")
+	if dbDriver == "" || dbSource == "" {
+		log.Fatal("DB_DRIVER and POSTGRES_SERVICE_URL must be set as environment variables")
+	}
+
+	conn, err := sql.Open(dbDriver, dbSource)
+	if err != nil {
+		fmt.Println(err)
+		log.Fatal("Couldn't connect to the database")
+		return
+	}
+	store := db.NewStore(conn)
+	server := api.NewServer(store)
+	err = server.Start(serverAddress)
+	if err != nil {
+		log.Fatal("cannot start the server:", err)
+	}
 }
