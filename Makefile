@@ -4,23 +4,23 @@ createNewMigration:
 
 # Apply migrations
 migrateup:
-	migrate -path ./db/migration -database "postgres://bankingGo2:bankingGo2@localhost:5433/bankingGo2?sslmode=disable" -verbose up
+	migrate -path ./db/migration -database "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable" -verbose up
 
 # Apply Force migrations
 migrateupForce:
-	migrate -path ./db/migration -database "postgres://bankingGo2:bankingGo2@localhost:5433/bankingGo2?sslmode=disable" force 1
+	migrate -path ./db/migration -database "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable" force 1
 
 # Confirm migrations have been applied
 confirmMigrateup:
-	docker exec -it simple_banking-db-1 psql -U bankingGo2 -d bankingGo2 -c '\dt'
+	docker exec -it simple_banking-db-1 psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c '\dt'
 
 # Remove Last migration applied
 migratedown:
-	migrate -path ./db/migration -database "postgres://bankingGo2:bankingGo2@localhost:5433/bankingGo2?sslmode=disable" -verbose down
+	migrate -path ./db/migration -database "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable" -verbose down
 
 # Force database version if dirty
 forcedatabaseVersion:
-	migrate -path ./db/migration -database "postgres://bankingGo2:bankingGo2@localhost:5433/bankingGo2?sslmode=disable" force 1
+	migrate -path ./db/migration -database "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable" force 1
 
 # Generate Go files with SQL queries...
 sqlc:
