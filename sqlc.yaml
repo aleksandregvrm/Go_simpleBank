@@ -1,0 +1,13 @@
+version: "2"
+sql:
+  - schema: "db/migration/"            # Path to your schema file(s)
+    queries: "db/query/"               # Directory where you will store your SQL queries
+    engine: "postgresql"               # Set to "postgresql" for PostgreSQL databases
+    gen:
+      go:
+        package: "db"                  # Name of the package for generated code
+        out: "db/sqlc"                 # Directory where the Go code will be generated
+        emit_json_tags: true           # Emit JSON tags on structs
+        emit_prepared_queries: false   # Emit prepared statements
+        emit_interface: false          # Do not generate interface
+        emit_exact_table_names: false  # Use Go struct names instead of exact table names

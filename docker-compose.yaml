@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    env_file:
+      - .env
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data_omno_bankingGo2:/var/lib/postgresql/data
+
+volumes:
+  postgres_data_omno_bankingGo2:
