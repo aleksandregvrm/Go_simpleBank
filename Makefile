@@ -30,4 +30,8 @@ sqlc:
 test:
 	go test -count=1 -v -cover ./...
 
-.PHONY: confirmMigrateup migrateup migratedown createNewMigration migrateupForce forcedatabaseVersion sqlc test
+# Running server command...
+server:
+	go run main.go
+
+.PHONY: confirmMigrateup migrateup migratedown createNewMigration migrateupForce forcedatabaseVersion sqlc test server
