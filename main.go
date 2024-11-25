@@ -20,6 +20,7 @@ func main() {
 	if dbDriver == "" || dbSource == "" {
 		log.Fatal("DB_DRIVER and POSTGRES_SERVICE_URL must be set as environment variables")
 	}
+	fmt.Println("Something")
 
 	conn, err := sql.Open(dbDriver, dbSource)
 	if err != nil {
