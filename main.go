@@ -2,35 +2,27 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
+	"os"
 
 	"example.com/banking/api"
 	db "example.com/banking/db/sqlc"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
-const (
-	dbDriver      = "postgres"
-	dbSource      = "postgres://bankingGo2:bankingGo2@localhost:5433/bankingGo2?sslmode=disable"
-	serverAddress = "127.0.0.1:8080"
-)
-
 func main() {
-	if dbDriver == "" || dbSource == "" {
-		log.Fatal("DB_DRIVER and POSTGRES_SERVICE_URL must be set as environment variables")
-	}
-	fmt.Println("Something")
-
-	conn, err := sql.Open(dbDriver, dbSource)
+	err := godotenv.Load("app.env")
 	if err != nil {
-		fmt.Println(err)
-		log.Fatal("Couldn't connect to the database")
-		return
+		log.Fatalf("Error loading .env file")
 	}
+	DBDriver := os.Getenv("DB_DRIVER")
+	DBSource := os.Getenv("DB_SOURCE")
+	ServerAddress := os.Getenv("SERVER_ADDRESS")
+	conn, err := sql.Open(DBDriver, DBSource)
 	store := db.NewStore(conn)
 	server := api.NewServer(store)
-	err = server.Start(serverAddress)
+	err = server.Start(ServerAddress)
 	if err != nil {
 		log.Fatal("cannot start the server:", err)
 	}
