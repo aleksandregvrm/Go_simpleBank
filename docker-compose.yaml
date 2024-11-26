@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   db:
+    container_name: simple_banking_db_1
     image: postgres:latest
     env_file:
       - .env
