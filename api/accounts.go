@@ -82,3 +82,26 @@ func (server *Server) GetAccount(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, account)
 }
+
+type updateAccountRequest struct {
+	ID      int64 `json:"id" binding:"required"`
+	Balance int64 `json:"balance" binding:"required"`
+}
+
+func (server *Server) UpdateAccount(ctx *gin.Context) {
+	var req updateAccountRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		handleDatabaseError(ctx, err)
+		return
+	}
+	args := db.UpdateAccountParams{
+		ID:      req.ID,
+		Balance: req.Balance,
+	}
+	account, err := server.store.UpdateAccount(ctx, args)
+	if err = ctx.ShouldBindJSON(&req); err != nil {
+		handleDatabaseError(ctx, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"acc": account, "msg": "This account has been updated"})
+}

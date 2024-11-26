@@ -1,3 +1,6 @@
+include .env
+export $(shell sed 's/=.*//' .env)
+
 # Creating New Migrations for up and down
 createNewMigration:
 	migrate create -ext sql -dir db/migration -seq init-schema
@@ -12,7 +15,7 @@ migrateupForce:
 
 # Confirm migrations have been applied
 confirmMigrateup:
-	docker exec -it simple_banking-db-1 psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c '\dt'
+	docker exec -it simple_banking_db_1 psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c '\dt'
 
 # Remove Last migration applied
 migratedown:
