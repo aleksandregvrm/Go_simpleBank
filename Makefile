@@ -11,6 +11,10 @@ createNewMigration:
 migrateup:
 	migrate -path ./db/migration -database "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable" -verbose up
 
+# Apply newest migrations
+migrateupLast:
+	migrate -path ./db/migration -database "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable" -verbose up 1
+
 # Apply Force migrations
 migrateupForce:
 	migrate -path ./db/migration -database "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable" force 1
@@ -19,9 +23,13 @@ migrateupForce:
 confirmMigrateup:
 	docker exec -it simple_banking_db_1 psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c '\dt'
 
-# Remove Last migration applied
+# Remove all migrations applied
 migratedown:
 	migrate -path ./db/migration -database "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable" -verbose down
+
+# Remove Last migration applied
+migratedownLast:
+	migrate -path ./db/migration -database "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable" -verbose down 1
 
 # Force database version if dirty
 forcedatabaseVersion:
@@ -39,4 +47,4 @@ test:
 server:
 	go run main.go
 
-.PHONY: confirmMigrateup migrateup migratedown createNewMigration migrateupForce forcedatabaseVersion sqlc test server
+.PHONY: confirmMigrateup migrateup migratedown createNewMigration migrateupForce forcedatabaseVersion sqlc test server migratedownLast migrateupLast
