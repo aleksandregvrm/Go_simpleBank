@@ -20,6 +20,9 @@ func main() {
 	DBSource := os.Getenv("DB_SOURCE")
 	ServerAddress := os.Getenv("SERVER_ADDRESS")
 	conn, err := sql.Open(DBDriver, DBSource)
+	if err != nil {
+		log.Fatal(err)
+	}
 	store := db.NewStore(conn)
 	server := api.NewServer(store)
 	err = server.Start(ServerAddress)

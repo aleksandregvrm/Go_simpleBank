@@ -10,7 +10,7 @@ import (
 
 type createAccountRequest struct {
 	Owner    string `json:"owner" binding:"required"`
-	Currency string `json:"currency" binding:"required,oneof=USD EUR"`
+	Currency string `json:"currency" binding:"required,ValidCurrency"`
 }
 
 func (server *Server) CreateAccount(ctx *gin.Context) {
@@ -88,7 +88,7 @@ type updateAccountRequest struct {
 	Balance int64 `json:"balance" binding:"required"`
 }
 
-func (server *Server) UpdateAccount(ctx *gin.Context) {
+func (server *Server) updateAccount(ctx *gin.Context) {
 	var req updateAccountRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		handleDatabaseError(ctx, err)
@@ -99,7 +99,7 @@ func (server *Server) UpdateAccount(ctx *gin.Context) {
 		Balance: req.Balance,
 	}
 	account, err := server.store.UpdateAccount(ctx, args)
-	if err = ctx.ShouldBindJSON(&req); err != nil {
+	if err != nil {
 		handleDatabaseError(ctx, err)
 		return
 	}
