@@ -1,6 +1,6 @@
 package util
 
-var SupportedCurrencies = [8]string{
+var SupportedCurrencies = [9]string{
 	"USD",
 	"EUR",
 	"CAD",
@@ -9,6 +9,7 @@ var SupportedCurrencies = [8]string{
 	"GBP",
 	"BRL",
 	"RUB",
+	"NGN",
 }
 
 func IsSupportedCurrency(currency string) bool {

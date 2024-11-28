@@ -1,12 +1,13 @@
 package util
 
 import (
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
 )
 
-const alphabet = "abcdefghijklmnopqrstuvwxyz"
+const alphabet = "abcdefgh"
 
 var rng *rand.Rand
 
@@ -43,4 +44,12 @@ func RandomMoney() int64 {
 func RandomCurrency() string {
 	currencies := SupportedCurrencies
 	return currencies[rng.Intn(len(currencies))]
+}
+
+func RandomOwner() string {
+	return RandomString()
+}
+
+func RandomEmail() string {
+	return fmt.Sprintf("%s@email.com", RandomString())
 }
