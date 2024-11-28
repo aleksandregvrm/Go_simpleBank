@@ -27,7 +27,7 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 		Balance:  0,
 	}
 
-	accounts, err := server.store.CreateAccount(ctx, arg)
+	account, err := server.store.CreateAccount(ctx, arg)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
@@ -38,7 +38,7 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 		handleDatabaseError(ctx, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, accounts)
+	ctx.JSON(http.StatusOK, account)
 }
 
 type ListAccountParams struct {
