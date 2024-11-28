@@ -24,6 +24,8 @@ func NewServer(store *db.Store) *Server {
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("ValidCurrency", ValidCurrency)
+		v.RegisterValidation("ValidEmail", ValidEmail)
+		v.RegisterValidation("ValidPassword", ValidPassword)
 	}
 
 	router.POST("/accounts", server.CreateAccount)
