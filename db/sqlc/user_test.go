@@ -10,9 +10,10 @@ import (
 )
 
 func createRandomUser(t *testing.T) User {
+	hashedPsw, err := util.HashPassword(util.RandomCurrency())
 	args := CreateUserParams{
 		Username:       util.RandomOwner(),
-		HashedPassword: util.RandomString(),
+		HashedPassword: hashedPsw,
 		FullName:       util.RandomOwner(),
 		Email:          util.RandomEmail(),
 	}
@@ -46,4 +47,26 @@ func TestGetUser(t *testing.T) {
 	require.Equal(t, user1.Email, user2.Email)
 	require.WithinDuration(t, user1.PasswordChangedAt, user2.PasswordChangedAt, time.Second)
 	require.WithinDuration(t, user1.CreatedAt, user2.CreatedAt, time.Second)
+}
+
+func TestLoginUser(t *testing.T) {
+	password := util.RandomString()
+	hashedPassword, err := util.HashPassword(password)
+	require.NoError(t, err)
+
+	args := CreateUserParams{
+		Username:       util.RandomOwner(),
+		HashedPassword: hashedPassword,
+		FullName:       util.RandomOwner(),
+		Email:          util.RandomEmail(),
+	}
+
+	user, err := TestQueries.CreateUser(context.Background(), args)
+	require.NoError(t, err)
+	require.NotEmpty(t, user)
+	isPasswordMatch := util.IsPasswordMatch(password, user.HashedPassword)
+	require.True(t, isPasswordMatch, "The password should match")
+
+	isPasswordMatch = util.IsPasswordMatch("wrongpassword", user.HashedPassword)
+	require.False(t, isPasswordMatch, "The password should not match")
 }
