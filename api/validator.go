@@ -26,9 +26,22 @@ var ValidEmail validator.Func = func(fieldLevel validator.FieldLevel) bool {
 
 var ValidPassword validator.Func = func(fieldLevel validator.FieldLevel) bool {
 	if password, ok := fieldLevel.Field().Interface().(string); ok {
-		var passwordRegex = `^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$`
-		re := regexp.MustCompile(passwordRegex)
-		return re.MatchString(password)
+		if len(password) < 5 {
+			return false
+		}
+
+		lowercaseRegex := regexp.MustCompile(`[a-z]`)
+		if !lowercaseRegex.MatchString(password) {
+			return false
+		}
+
+		digitRegex := regexp.MustCompile(`\d`)
+		if !digitRegex.MatchString(password) {
+			return false
+		}
+
+		// If all checks pass
+		return true
 	}
 	return false
 }
