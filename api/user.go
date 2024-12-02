@@ -18,12 +18,14 @@ type RegisterAccountRequest struct {
 func (server *Server) RegisterUser(ctx *gin.Context) {
 	var req RegisterAccountRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal Server Error with request data..."})
+		handleDatabaseError(ctx, err)
+		return
 	}
 
 	hashedPsw, err := util.HashPassword(req.Password)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal Server Error Error with hashing password"})
+		return
 	}
 
 	args := db.CreateUserParams{
@@ -35,7 +37,8 @@ func (server *Server) RegisterUser(ctx *gin.Context) {
 
 	user, err := server.store.CreateUser(ctx, args)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal Server Error Error with creating user"})
+		handleDatabaseError(ctx, err)
+		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"msg": "Registration successful", "user": user})
 
@@ -50,6 +53,7 @@ func (server *Server) LoginUser(ctx *gin.Context) {
 	var req LoginUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal Server Error with request data..."})
+		return
 	}
 	userToMatch, _ := server.GetSingleUser(ctx, req.Username)
 	if err := ctx.ShouldBindJSON(&req); err != nil {
