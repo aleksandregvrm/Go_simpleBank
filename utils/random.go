@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const alphabet = "abcdefgh"
+const alphabet = "bcdefghasdfqerqfadsfasdfasdfasdf"
 
 var rng *rand.Rand
 
