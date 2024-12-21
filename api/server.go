@@ -3,23 +3,32 @@ package api
 import (
 	"errors"
 	"net/http"
+	"os"
 
 	db "example.com/banking/db/sqlc"
+	utils "example.com/banking/utils/token"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/joho/godotenv"
 	"github.com/lib/pq"
 )
 
 // Serving http requests
 type Server struct {
-	store  *db.Store
-	router *gin.Engine
+	store      *db.Store
+	tokenMaker utils.Maker
+	router     *gin.Engine
 }
 
 // Creates server with provided routes and env vars applied
-func NewServer(store *db.Store) *Server {
-	server := &Server{store: store}
+func NewServer(store *db.Store) (*Server, error) {
+	err := godotenv.Load(".env")
+	if err != nil {
+		return nil, err
+	}
+	tokenMaker, err := utils.NewPasetoMaker(os.Getenv("TOKEN_SYMMETRIC_KEY"))
+	server := &Server{store: store, tokenMaker: tokenMaker}
 	router := gin.Default()
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
@@ -28,15 +37,20 @@ func NewServer(store *db.Store) *Server {
 		v.RegisterValidation("ValidPassword", ValidPassword)
 	}
 
+	server.registerRouters(router)
+
+	server.router = router
+	return server, nil
+}
+
+func (server *Server) registerRouters(router *gin.Engine) {
+
 	router.POST("/accounts", server.CreateAccount)
 	router.GET("/accounts/:id", server.GetAccount)
 	router.GET("/accounts", server.ListAccounts)
 	router.POST("/transfers", server.CreateTransfer)
 	router.POST("/user/register", server.RegisterUser)
 	router.POST("/user/login", server.LoginUser)
-
-	server.router = router
-	return server
 }
 
 func (server *Server) Start(address string) error {

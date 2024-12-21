@@ -1,11 +1,15 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"time"
 
 	db "example.com/banking/db/sqlc"
-	util "example.com/banking/utils"
+	utils "example.com/banking/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 type RegisterAccountRequest struct {
@@ -15,6 +19,24 @@ type RegisterAccountRequest struct {
 	Email    string `json:"email" binding:"required,ValidEmail"`
 }
 
+type UserResponse struct {
+	Username          string    `json:"username"`
+	FullName          string    `json:"full_name"`
+	Email             string    `json:"email"`
+	CreatedAt         time.Time `json:"created_at"`
+	PasswordChangedAt time.Time `json:"password_changed_at"`
+}
+
+func newUserResponse(user db.User) UserResponse {
+	return UserResponse{
+		Username:          user.Username,
+		FullName:          user.FullName,
+		Email:             user.Email,
+		PasswordChangedAt: user.PasswordChangedAt,
+		CreatedAt:         user.CreatedAt,
+	}
+}
+
 func (server *Server) RegisterUser(ctx *gin.Context) {
 	var req RegisterAccountRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -22,7 +44,7 @@ func (server *Server) RegisterUser(ctx *gin.Context) {
 		return
 	}
 
-	hashedPsw, err := util.HashPassword(req.Password)
+	hashedPsw, err := utils.HashPassword(req.Password)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal Server Error Error with hashing password"})
 		return
@@ -40,7 +62,8 @@ func (server *Server) RegisterUser(ctx *gin.Context) {
 		handleDatabaseError(ctx, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"msg": "Registration successful", "user": user})
+	rsp := newUserResponse(user)
+	ctx.JSON(http.StatusOK, gin.H{"msg": "Registration successful", "user": rsp})
 
 }
 
@@ -49,30 +72,51 @@ type LoginUserRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-func (server *Server) LoginUser(ctx *gin.Context) {
-	var req LoginUserRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal Server Error with request data..."})
-		return
-	}
-	userToMatch, _ := server.GetSingleUser(ctx, req.Username)
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"msg": "User not found", "err": err})
-		return
-	}
-	// Checking if passwords match
-	if ok := util.IsPasswordMatch(req.Password, userToMatch.HashedPassword); ok == false {
-		ctx.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid credentials"})
-		return
-	}
-	ctx.JSON(http.StatusOK, gin.H{"msg": "Success"})
-
+type LoginUserResponse struct {
+	AccessToken string       `json:"access_token"`
+	User        UserResponse `json:"user"`
 }
 
-func (server *Server) GetSingleUser(ctx *gin.Context, username string) (*db.User, error) {
-	user, err := server.store.GetUser(ctx, username)
+func (server *Server) LoginUser(ctx *gin.Context) {
+	err := godotenv.Load(".env")
 	if err != nil {
-		return nil, err
+		return
 	}
-	return &user, nil
+	var req LoginUserRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid request data", "error": err.Error()})
+		return
+	}
+
+	user, err := server.store.GetUser(ctx, req.Username)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"msg": "User not found", "error": err.Error()})
+		return
+	}
+
+	// Verify the password
+	if !utils.IsPasswordMatch(req.Password, user.HashedPassword) {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"msg": "Invalid credentials"})
+		return
+	}
+
+	duration, err := time.ParseDuration(os.Getenv("ACCESS_TOKEN_DURATION"))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "Invalid token duration", "error": err.Error()})
+		return
+	}
+	fmt.Println(duration)
+	accessToken, err := server.tokenMaker.CreateToken(user.Username, duration)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "Failed to generate access token", "error": err.Error()})
+		return
+	}
+	fmt.Println(accessToken)
+	// Prepare the response
+	rsp := LoginUserResponse{
+		AccessToken: accessToken,
+		User:        newUserResponse(user),
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"msg": "Login successful", "data": rsp})
 }
