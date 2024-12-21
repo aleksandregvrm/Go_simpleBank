@@ -15,6 +15,7 @@ func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("Error loading .env file")
+		return
 	}
 	DBDriver := os.Getenv("DB_DRIVER")
 	DBSource := os.Getenv("DB_SOURCE")
@@ -22,9 +23,14 @@ func main() {
 	conn, err := sql.Open(DBDriver, DBSource)
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
 	store := db.NewStore(conn)
-	server := api.NewServer(store)
+	server, err := api.NewServer(store)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 	err = server.Start(ServerAddress)
 	if err != nil {
 		log.Fatal("cannot start the server:", err)
