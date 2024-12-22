@@ -2,15 +2,16 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 
 	db "example.com/banking/db/sqlc"
+	util "example.com/banking/utils/token"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 )
 
 type createAccountRequest struct {
-	Owner    string `json:"owner" binding:"required"`
 	Currency string `json:"currency" binding:"required,ValidCurrency"`
 }
 
@@ -20,9 +21,9 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 		handleDatabaseError(ctx, err)
 		return
 	}
-
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*util.Payload)
 	arg := db.CreateAccountParams{
-		Owner:    req.Owner,
+		Owner:    authPayload.Username,
 		Currency: req.Currency,
 		Balance:  0,
 	}
@@ -52,8 +53,9 @@ func (server *Server) ListAccounts(ctx *gin.Context) {
 		handleDatabaseError(ctx, err)
 		return
 	}
-
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*util.Payload)
 	arg := db.ListAllAccountsParams{
+		Owner:  authPayload.Username,
 		Limit:  req.PageSize,
 		Offset: (req.PageID - 1) * req.PageSize,
 	}
@@ -67,8 +69,7 @@ func (server *Server) ListAccounts(ctx *gin.Context) {
 }
 
 type getAccountRequest struct {
-	ID    int64 `uri:"id" binding:"required",min=1`
-	Owner string
+	ID int64 `uri:"id" binding:"required",min=1`
 }
 
 func (server *Server) GetAccount(ctx *gin.Context) {
@@ -84,6 +85,12 @@ func (server *Server) GetAccount(ctx *gin.Context) {
 			handleDatabaseError(ctx, err)
 			return
 		}
+		handleDatabaseError(ctx, err)
+		return
+	}
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*util.Payload)
+	if account.Owner != authPayload.Username {
+		err := errors.New("account doesn't belong to the authenticated user")
 		handleDatabaseError(ctx, err)
 		return
 	}

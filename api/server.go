@@ -45,10 +45,13 @@ func NewServer(store *db.Store) (*Server, error) {
 
 func (server *Server) registerRouters(router *gin.Engine) {
 
-	router.POST("/accounts", server.CreateAccount)
-	router.GET("/accounts/:id", server.GetAccount)
-	router.GET("/accounts", server.ListAccounts)
-	router.POST("/transfers", server.CreateTransfer)
+	// creating the authorized only route
+	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
+
+	authRoutes.POST("/accounts", server.CreateAccount)
+	authRoutes.GET("/accounts/:id", server.GetAccount)
+	authRoutes.GET("/accounts", server.ListAccounts)
+	authRoutes.POST("/transfers", server.CreateTransfer)
 	router.POST("/user/register", server.RegisterUser)
 	router.POST("/user/login", server.LoginUser)
 }
