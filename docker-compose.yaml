@@ -8,8 +8,28 @@ services:
       - .env
     ports:
       - "5433:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
     volumes:
       - postgres_data_omno_bankingGo2:/var/lib/postgresql/data
+
+  app:
+    image: simplebank:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    environment:
+      - DB_SOURCE=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+    build:
+      context: .
+      dockerfile: Dockerfile
 
 volumes:
   postgres_data_omno_bankingGo2:
