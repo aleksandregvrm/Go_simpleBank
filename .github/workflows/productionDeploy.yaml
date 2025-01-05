@@ -1,18 +1,12 @@
 name: Deploy
 
 on:
+  workflow_run:
+    workflows: ["Running tests"]
+    types:
+      - completed
   push:
-    branches: ["main"]
-    paths:
-      - "Dockerfile"
-      - ".github/workflows/deploy.yml"
-      - "src/**"
-  pull_request:
-    branches: ["main"]
-    paths:
-      - "Dockerfile"
-      - ".github/workflows/deploy.yml"
-      - "src/**"
+    branches: [ main ]
 
 jobs:
   build:
