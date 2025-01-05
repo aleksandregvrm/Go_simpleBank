@@ -120,3 +120,34 @@ func (server *Server) LoginUser(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"msg": "Login successful", "data": rsp})
 }
+
+type DeleteUserParams struct {
+	Username string `json:"username" binding:"required"`
+}
+
+func (server *Server) DeleteUser(ctx *gin.Context) {
+	var req DeleteUserParams
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid request data", "error": err.Error()})
+		return
+	}
+	accountUsers, err := server.store.GetUserWithAccounts(ctx, req.Username)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid request data", "error": err.Error()})
+		return
+	}
+	for _, user := range accountUsers {
+		if user.Balance.Valid && user.Balance.Int64 > 0 {
+			ctx.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid request data", "error": err.Error()})
+			// this for loop will check if the
+			return
+		}
+	}
+
+	if err := server.store.DeleteUser(ctx, req.Username); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "Failed to delete the user", "error": err.Error()})
+		return
+	}
+	fmt.Println("user deleted")
+	ctx.JSON(http.StatusOK, gin.H{"msg": "user deleted Successfully"})
+}

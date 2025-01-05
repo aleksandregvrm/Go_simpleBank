@@ -19,7 +19,7 @@ services:
 
   app:
     image: simplebank:latest
-    depends_on:
+    depends_on: 
       db:
         condition: service_healthy
     ports:
