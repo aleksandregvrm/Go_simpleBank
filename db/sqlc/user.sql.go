@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+	"database/sql"
+	"time"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -40,6 +42,15 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users WHERE username = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, username string) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, username)
+	return err
+}
+
 const getUser = `-- name: GetUser :one
 SELECT username, hashed_password, full_name, email, password_changed_at, created_at FROM users WHERE username = $1 LIMIT 1
 `
@@ -56,4 +67,71 @@ func (q *Queries) GetUser(ctx context.Context, username string) (User, error) {
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getUserWithAccounts = `-- name: GetUserWithAccounts :many
+SELECT 
+    u.username,
+    u.hashed_password,
+    u.full_name,
+    u.email,
+    u.password_changed_at,
+    u.created_at AS user_created_at,
+    a.id AS account_id,
+    a.balance,
+    a.currency,
+    a.created_at AS account_created_at
+FROM 
+    users u
+LEFT JOIN 
+    accounts a ON u.username = a.owner
+WHERE 
+    u.username = $1
+`
+
+type GetUserWithAccountsRow struct {
+	Username          string         `json:"username"`
+	HashedPassword    string         `json:"hashed_password"`
+	FullName          string         `json:"full_name"`
+	Email             string         `json:"email"`
+	PasswordChangedAt time.Time      `json:"password_changed_at"`
+	UserCreatedAt     time.Time      `json:"user_created_at"`
+	AccountID         sql.NullInt64  `json:"account_id"`
+	Balance           sql.NullInt64  `json:"balance"`
+	Currency          sql.NullString `json:"currency"`
+	AccountCreatedAt  sql.NullTime   `json:"account_created_at"`
+}
+
+func (q *Queries) GetUserWithAccounts(ctx context.Context, username string) ([]GetUserWithAccountsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserWithAccounts, username)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserWithAccountsRow{}
+	for rows.Next() {
+		var i GetUserWithAccountsRow
+		if err := rows.Scan(
+			&i.Username,
+			&i.HashedPassword,
+			&i.FullName,
+			&i.Email,
+			&i.PasswordChangedAt,
+			&i.UserCreatedAt,
+			&i.AccountID,
+			&i.Balance,
+			&i.Currency,
+			&i.AccountCreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
