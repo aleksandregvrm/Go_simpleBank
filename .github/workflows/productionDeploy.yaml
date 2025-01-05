@@ -2,17 +2,9 @@ name: Deploy
 
 on:
   push:
-    branches: ["main"]
-    paths:
-      - "Dockerfile"
-      - ".github/workflows/deploy.yml"
-      - "src/**"
+    branches: [ main ]
   pull_request:
-    branches: ["main"]
-    paths:
-      - "Dockerfile"
-      - ".github/workflows/deploy.yml"
-      - "src/**"
+    branches: [ main ]
 
 jobs:
   build:
