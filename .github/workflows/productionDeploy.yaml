@@ -5,6 +5,7 @@ on:
     workflows: ["Running tests"]
     types:
       - completed
+    status: success
   push:
     branches: [ main ]
 
