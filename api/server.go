@@ -54,6 +54,7 @@ func (server *Server) registerRouters(router *gin.Engine) {
 	authRoutes.POST("/transfers", server.CreateTransfer)
 	router.POST("/user/register", server.RegisterUser)
 	router.POST("/user/login", server.LoginUser)
+	authRoutes.DELETE("/user/", server.DeleteUser)
 }
 
 func (server *Server) Start(address string) error {

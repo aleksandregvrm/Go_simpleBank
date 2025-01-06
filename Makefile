@@ -3,6 +3,10 @@ ifneq ("$(wildcard .env)", "")
 	export $(shell sed 's/=.*//' .env)
 endif
 
+# for tidying the import statements
+tidy:
+	go mod tidy
+
 # Creating New Migrations for up and down
 createNewMigration:
 	migrate create -ext sql -dir db/migration -seq init-schema
@@ -47,4 +51,4 @@ test:
 server:
 	go run main.go
 
-.PHONY: confirmMigrateup migrateup migratedown createNewMigration migrateupForce forcedatabaseVersion sqlc test server migratedownLast migrateupLast
+.PHONY: confirmMigrateup migrateup migratedown createNewMigration migrateupForce forcedatabaseVersion sqlc test server migratedownLast migrateupLast tidy
