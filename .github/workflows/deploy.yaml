@@ -52,5 +52,11 @@ jobs:
           REPOSITORY: my-ecr-repo
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker compose up --build
+          # Build the image using docker compose
+          docker compose build app
+
+          # Tag the image for Amazon ECR
+          docker tag simplebank:latest $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+          # Push the image to Amazon ECR
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
