@@ -57,7 +57,7 @@ jobs:
           docker compose build app
 
           # Tag the image for Amazon ECR
-          docker tag simplebank:latest $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          docker tag simplebank_app:latest $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
           # Push the image to Amazon ECR
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
