@@ -8,6 +8,7 @@ import (
 
 	db "example.com/banking/db/sqlc"
 	utils "example.com/banking/utils"
+	util "example.com/banking/utils/token"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -122,13 +123,18 @@ func (server *Server) LoginUser(ctx *gin.Context) {
 }
 
 type DeleteUserParams struct {
-	Username string `json:"username" binding:"required"`
+	Username string `uri:"username" binding:"required"`
 }
 
 func (server *Server) DeleteUser(ctx *gin.Context) {
 	var req DeleteUserParams
-	if err := ctx.ShouldBindJSON(&req); err != nil {
+	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid request data", "error": err.Error()})
+		return
+	}
+	authPayload := ctx.MustGet(authorizationPayloadKey).(util.Payload)
+	if authPayload.Username != req.Username {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized to delete this user"})
 		return
 	}
 	accountUsers, err := server.store.GetUserWithAccounts(ctx, req.Username)
